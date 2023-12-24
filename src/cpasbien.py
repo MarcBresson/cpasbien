@@ -11,6 +11,8 @@
 from __future__ import print_function
 import urllib
 import re
+import logging
+logger = logging.getLogger()
 
 from html.parser import HTMLParser
 
@@ -29,6 +31,7 @@ class cpasbien():
 
     def __init__(self):
         self.real_url = self.find_url()
+        logger.debug("Cpasbien URL: %s", self.real_url)
 
     def find_url(self):
         """Retrieve url from github repository, so it can work even if the url change"""
@@ -40,12 +43,22 @@ class cpasbien():
             cpasbien_url = content.strip()
             return cpasbien_url
 
-        except urllib.error.URLError as errno:
-            print(" ".join(("Connection error:", str(errno.reason))))
-            return "http://www.cpasbien.biz"
+        except urllib.error.URLError as e:
+            default_url = "http://www.cpasbien.biz"
+
+            if e.reason.lower() == "not found":
+                logger.warning("Could not find URL '%s', defaulting to '%s'", link_github, default_url)
+            else:
+                logger.warning(
+                    "Error '%s' while tring to find the current cpasbien URL, defaulting to '%s'",
+                    e.reason,
+                    default_url
+                )
+            return default_url
 
     def download_torrent(self, desc_link):
         """find the link to the torrent"""
+        logger.debug("Looking for the torrent download link at URL %s", desc_link)
         req = urllib.request.Request(desc_link, headers=headers)
 
         try:
@@ -57,6 +70,7 @@ class cpasbien():
         content = response.read().decode()
 
         link = self.real_url + re.findall(r'<a href="(/get_torrent/.*?)">', content)[0]
+        logger.info("Found torrent download link with URL %s", link)
 
         print(download_file(link))
 
@@ -78,6 +92,7 @@ class cpasbien():
             results = parser.results
             parser.close()
 
+            # if there is no new result on the page, stop the search
             if len(results) - len_old_result == 0:
                 break
 
@@ -87,6 +102,8 @@ class cpasbien():
         good_order = [ord_res for _, ord_res in
                       sorted(zip([[int(res['seeds']), int(res['leech'])] for res in results], range(len(results))))]
         results = [results[x] for x in good_order[::-1]]
+
+        logger.info("found %d torrents from cpasbien search engine", len(results))
 
         # Fix size and add engine
         for i, res in enumerate(results):
