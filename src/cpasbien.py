@@ -14,10 +14,9 @@ from html.parser import HTMLParser
 
 from helpers import retrieve_url, headers, download_file
 from novaprinter import prettyPrinter
-import json
 
 
-class cpasbien(object):
+class cpasbien():
     # This is a fake url only for engine associations in file download
     url = "http://www.cpasbien.fr"
     name = "Cpasbien (french)"
@@ -31,17 +30,17 @@ class cpasbien(object):
 
     def find_url(self):
         """Retrieve url from github repository, so it can work even if the url change"""
-        link_github = "https://raw.githubusercontent.com/MarcBresson/cpasbien/master/urls.json"
+        link_github = "https://raw.githubusercontent.com/MarcBresson/cpasbien/master/cpasbien.url"
         try:
             req = urllib.request.Request(link_github, headers=headers)
             response = urllib.request.urlopen(req)
-            content = response.read().decode()
-            urls = json.loads(content)
-            return urls['cpasbien'][0]
+            content: str = response.read().decode()
+            cpasbien_url = content.strip()
+            return cpasbien_url
 
         except urllib.error.URLError as errno:
             print(" ".join(("Connection error:", str(errno.reason))))
-            return "http://www.cpasbien.moe"
+            return "http://www.cpasbien.biz"
 
     def download_torrent(self, desc_link):
         """find the link to the torrent"""
@@ -55,7 +54,7 @@ class cpasbien(object):
 
         content = response.read().decode()
 
-        link = self.real_url + re.findall('<a href="(\/get_torrent\/.*?)">', content)[0]
+        link = self.real_url + re.findall(r'<a href="(/get_torrent/.*?)">', content)[0]
 
         print(download_file(link))
 
