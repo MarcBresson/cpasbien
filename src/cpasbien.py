@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # VERSION: 2.1
 # AUTHOR: Davy39 <davy39@hmamail.com>, Paolo M
-# CONTRIBUTORS: Simon <simon@brulhart.me>
+# CONTRIBUTORS:
+#    Simon <simon@brulhart.me>
+#    Marc Bresson
 
 # Copyleft
 
